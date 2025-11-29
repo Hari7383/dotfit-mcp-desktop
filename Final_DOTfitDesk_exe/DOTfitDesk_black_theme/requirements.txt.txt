@@ -1,0 +1,7 @@
+flask
+sympy
+tkinter
+pandas
+bs4
+qrcode
+deep-translator

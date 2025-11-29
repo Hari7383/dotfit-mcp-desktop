@@ -1,0 +1,13 @@
+flask
+flask-cors
+pip install "flack[async]"
+pip install qrcode
+pip install sympy
+pip install numpy
+pip install selenium pandas webdriver-manager
+pip install selectolax
+pip install hypercorn
+pip install pywebview
+
+when flask crash (pip install flask flask-cors flask-restful)
+for pip crash: python -m ensurepip --upgrade

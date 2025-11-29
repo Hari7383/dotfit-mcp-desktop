@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOTfit Desk</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='DOTfit_logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='DOTfit_logo.png') }}">
+</head>
+
+<body>
+    <div id="exe-loading-overlay" class="loading-overlay">
+        <div class="loading-box">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Converting project to EXE.<br>Please wait.</p>
+            <p style="margin-top: 20px; font-size: 12px; opacity: 0.6; line-height: 1.4;">
+                <i class="fas fa-info-circle" style="font-size: 11px;"></i>
+                Note: If the EXE is not working, try adding a <code>requirements.txt</code> file to your folder.
+            </p>
+        </div>
+    </div>
+
+
+    <button id="history-toggle" class="history-toggle-btn" title="View History">
+        <img src="{{ url_for('static', filename='icons8-history-49.png') }}" alt="History"
+            style="height: 22px; vertical-align: middle;">
+    </button>
+
+    <div id="history-sidebar" class="history-sidebar">
+
+        <div class="history-header">
+            <div class="header-text">
+                <span>Session History</span>
+                <span id="history-count" style="font-size: 0.8em; opacity: 0.7;">(0)</span>
+            </div>
+
+            <button id="clear-history" class="clear-history-btn" title="Clear Session">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+
+        <div id="history-list" class="history-list">
+        </div>
+
+    </div>
+
+    <div class="content-area" id="content-area">
+        <div class="dotfit-logo-header">
+            <img src="{{ url_for('static', filename='DOTfit.png') }}" alt="DOTfit Desk Logo" class="dotfit-logo-img">
+        </div>
+
+        <div id="dynamic-tool-area"></div>
+        {% if result %}
+        <div class="result-box initial-result" id="content-area">
+            <h2>
+                <i class="fas fa-microchip"></i>
+                Tool Result{% if tool_name %} {% endif %}:
+            </h2>
+
+            {% if result.is_image %}
+            <div class="qr-output-container" id="content-area">
+                <p class="qr-message">{{ result.message }}</p>
+                <img class="qr-code-image" src="data:{{ result.mime_type }};base64,{{ result.base64_data }}"
+                    alt="QR Code Output for {{ query }}">
+            </div>
+            {% else %}
+            <pre>{{ result | urlize | safe }}</pre>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div id="loading-message-placeholder"></div>
+    </div>
+
+    <div class="floating-search-bar">
+        <div id="tool-tags-container" class="tool-tags-container"></div>
+
+        <form method="POST" action="{{ url_for('index') }}" id="tool-form">
+
+            <button type="button" id="tool-menu-button">
+                <i class="fas fa-plus"></i>
+            </button>
+
+            <div id="tool-menu-box" class="tool-menu-box hidden"></div>
+            <input type="hidden" name="tool_name" id="tool-name-input">
+
+            <input type="text" name="visible_query" id="query-input" placeholder="Ask here" required autofocus>
+
+            <input type="hidden" name="reliable_query" id="reliable-query-input">
+
+            <button type="submit" id="submit-button">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+
+        </form>
+    </div>
+
+    <div class="floating-warning">
+        DOTfit can make mistakes. Always double-check critical information.
+    </div>
+
+    <script>
+        // =================================================
+        // GLOBAL STATE & HISTORY CONFIG
+        // =================================================
+        // This comes from Python. If it changes, the server restarted.
+        const SERVER_BOOT_ID = "{{ server_boot_id }}";
+
+        let selectedTool = localStorage.getItem("selectedTool") || null;
+
+        const inputField = document.getElementById('query-input');
+        const reliableInputField = document.getElementById('reliable-query-input');
+        const tagsContainer = document.getElementById('tool-tags-container');
+        const toolForm = document.getElementById('tool-form');
+        const loadingPlaceholder = document.getElementById('loading-message-placeholder');
+        const toolMenuButton = document.getElementById('tool-menu-button');
+        const toolMenuBox = document.getElementById('tool-menu-box');
+        const contentArea = document.getElementById('content-area');
+
+        // History Elements
+        const historySidebar = document.getElementById('history-sidebar');
+        const historyToggle = document.getElementById('history-toggle');
+        const historyList = document.getElementById('history-list');
+        const historyCount = document.getElementById('history-count');
+
+        // =================================================
+        // HISTORY MANAGER LOGIC
+        // =================================================
+        const HistoryManager = {
+            key: 'mcp_history_data',
+            bootKey: 'mcp_boot_id',
+
+            init() {
+                const storedBootId = localStorage.getItem(this.bootKey);
+                if (storedBootId !== SERVER_BOOT_ID) {
+                    console.log("Server restart detected. Clearing history.");
+                    localStorage.removeItem(this.key);
+                    localStorage.setItem(this.bootKey, SERVER_BOOT_ID);
+                }
+                this.render();
+            },
+
+            add(query, toolName) {
+                if (!query) return;
+
+                let history = this.get();
+
+                history = history.filter(h => h.query.toLowerCase().trim() !== query.toLowerCase().trim());
+
+                const newItem = {
+                    query: query,
+                    tool: toolName || 'General',
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+
+                history.unshift(newItem);
+
+                if (history.length > 30) history.pop();
+
+                localStorage.setItem(this.key, JSON.stringify(history));
+                this.render();
+            },
+
+            get() {
+                const data = localStorage.getItem(this.key);
+                return data ? JSON.parse(data) : [];
+            },
+
+            restore(query) {
+                inputField.value = query;
+                reliableInputField.value = query;
+                historySidebar.classList.remove('open');
+
+                loadingPlaceholder.innerHTML = `
+                    <div class="result-box loading-state">
+                        <h2><i class="fas fa-spinner fa-spin"></i> Restoring History...</h2>
+                        <pre>Re-running query: "${query}"</pre>
+                    </div>
+                `;
+                toolForm.submit();
+            },
+
+            render() {
+                const history = this.get();
+                historyCount.innerText = `(${history.length})`;
+                historyList.innerHTML = '';
+
+                if (history.length === 0) {
+                    historyList.innerHTML =
+                        `<div style="color: #666; font-style: italic; text-align: center; margin-top: 20px;">No history this session...</div>`;
+                    return;
+                }
+
+                history.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    div.innerHTML = `
+                        <div class="history-query">${item.query}</div>
+                        <div class="history-meta">
+                            <span>${item.tool}</span>
+                            <span>${item.timestamp}</span>
+                        </div>
+                    `;
+                    div.onclick = () => this.restore(item.query);
+                    historyList.appendChild(div);
+                });
+            },
+
+            clear() {
+                localStorage.removeItem(this.key);
+                this.render();
+            }
+        };
+
+
+        // History Event Listeners
+        historyToggle.addEventListener('click', () => historySidebar.classList.toggle('open'));
+        document.getElementById("clear-history").addEventListener("click", () => {
+            HistoryManager.clear();
+        });
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!historySidebar.contains(e.target) && !historyToggle.contains(e.target) && historySidebar.classList.contains('open')) {
+                historySidebar.classList.remove('open');
+            }
+        });
+
+        // =================================================
+        // TOOL DATA & EXISTING LOGIC
+        // =================================================
+        // const ALL_TOOLS_COMMANDS = [
+        //     'Weather', 'Temperature', 'Currency', 'Exchange', 'Calculate',
+        //     'Math', 'Translate', 'Language', 'Forecast', 'Convert', 'Rain',
+        //     'Qr Generator', 'Qrcode', 'Calendar', 'Date', 'Month', 'Year', 'Mapreviews',
+        //     'Reviews', 'Search', 'Websearch', 'News', 'Dictionary', 'Route & Distance',
+        //     'Geo Code', 'Timezone'
+        // ];
+
+        const TOOL_MENU_DATA = [
+            { name: 'Weather', command: 'Weather', icon: 'fas fa-cloud-sun', example: 'weather London' },
+            { name: 'Currency Converter', command: 'Currency', icon: 'fas fa-dollar-sign', example: 'currency 10 USD to EUR' },
+            { name: 'Calculator', command: 'Calculate', icon: 'fas fa-calculator', example: 'calculate 5 + 3' },
+            { name: 'Translator', command: 'Translate', icon: 'fas fa-language', example: 'translate hello to French' },
+            { name: 'QR Generator', command: 'Qr Generator', icon: 'fas fa-qrcode', example: 'qr www.google.com' },
+            { name: 'Calendar', command: 'Calendar', icon: 'fas fa-calendar', example: 'calendar feb 29 2024' },
+            { name: 'Map Reviews', command: 'Reviews', icon: 'fas fa-map-marker-alt', example: 'reviews Zoho Chennai' },
+            { name: 'Web Search', command: 'Search', icon: 'fas fa-globe', example: 'search who invented python' },
+            { name: 'Dictionary', command: 'Dictionary', icon: 'fas fa-book-open', example: 'dictionary hello' },
+            { name: 'News', command: 'News', icon: 'fas fa-newspaper', example: 'news today India' },
+            { name: 'Geo Code', command: 'Geo Code', icon: 'fas fa-location', example: 'Geo Code Chennai' },
+            { name: 'Route & Distance', command: 'Route & Distance', icon: 'fas fa-route', example: 'Route & Distance Trichy to Chennai' },
+            { name: 'Timezone', command: 'Timezone', icon: 'fas fa-globe-americas', example: 'Timezone Convert Trichy to Chennai' },
+            { name: 'Converters', command: 'converters', icon: 'fas fa-exchange-alt', example: '' },
+        ];
+
+        function applyLockedTool() {
+            if (selectedTool) {
+                inputField.value = selectedTool + " ";
+            }
+        }
+
+        function showTags(inputValue) {
+            tagsContainer.innerHTML = '';
+            tagsContainer.style.display = 'none';
+
+            if (selectedTool && inputValue.startsWith(selectedTool + " ")) return;
+
+            const lower = inputValue.toLowerCase().trim();
+            if (!lower) return;
+
+            // const matching = ALL_TOOLS_COMMANDS.filter(t => t.includes(lower));
+            // if (!matching.length) return;
+
+            matching.forEach(tool => {
+                const tag = document.createElement('span');
+                tag.classList.add('tool-tag');
+                tag.textContent = tool.charAt(0).toUpperCase() + tool.slice(1);
+
+                tag.onclick = () => {
+                    selectedTool = tool;
+                    localStorage.setItem("selectedTool", tool);
+
+                    inputField.value = tool + " ";
+                    tagsContainer.style.display = 'none';
+                    inputField.focus();
+                };
+
+                tagsContainer.appendChild(tag);
+            });
+
+            tagsContainer.style.display = 'flex';
+        }
+
+        function generateToolMenu() {
+            let html = '<div class="menu-header">Available Tools:</div>';
+            TOOL_MENU_DATA.forEach(tool => {
+                html += `
+                    <div class="tool-menu-item"
+                         data-command="${tool.command}"
+                         title="${tool.example}">
+                        <i class="${tool.icon}"></i> ${tool.name}
+                    </div>
+                `;
+            });
+            toolMenuBox.innerHTML = html;
+        }
+
+        toolMenuButton.addEventListener('click', () => {
+            toolMenuBox.classList.toggle('hidden');
+            inputField.focus();
+        });
+
+        toolMenuBox.addEventListener('click', function (event) {
+            const item = event.target.closest('.tool-menu-item');
+            if (!item) return;
+
+            const command = item.getAttribute('data-command');
+
+            if (command === "converters") {
+                document.querySelectorAll('.result-box').forEach(el => el.style.display = "none");
+                loadConvertersHub();
+                toolMenuBox.classList.add('hidden');
+                selectedTool = null;
+                inputField.value = "";
+                return;
+            }
+
+            if (command === "imageconvert") {
+                document.querySelectorAll('.result-box').forEach(el => el.style.display = "none");
+                loadImageConverterUI();
+                toolMenuBox.classList.add('hidden');
+                selectedTool = null;
+                inputField.value = "";
+                return;
+            }
+            document.getElementById("dynamic-tool-area").innerHTML = "";
+            document.querySelectorAll('.result-box').forEach(el => el.style.display = "block");
+
+            selectedTool = command;
+            localStorage.setItem("selectedTool", command);
+
+            inputField.value = command + " ";
+            tagsContainer.style.display = 'none';
+            toolMenuBox.classList.add('hidden');
+            inputField.focus();
+        });
+
+        inputField.addEventListener('keyup', function () {
+            const val = inputField.value;
+
+            if (selectedTool && val.startsWith(selectedTool + " ")) {
+                tagsContainer.style.display = 'none';
+                return;
+            }
+
+            if (selectedTool && !val.startsWith(selectedTool)) {
+                selectedTool = null;
+                localStorage.removeItem("selectedTool");
+            }
+
+            showTags(val);
+        });
+
+        toolForm.addEventListener('submit', function (event) {
+            const q = inputField.value.trim();
+            if (!q) {
+                event.preventDefault();
+                return;
+            }
+
+            reliableInputField.value = q;
+            document.getElementById("tool-name-input").value = selectedTool || "";
+
+            loadingPlaceholder.innerHTML = `
+                <div class="result-box loading-state">
+                    <h2><i class="fas fa-spinner fa-spin"></i> Thinking...</h2>
+                    <pre>Processing query: "${q}"</pre>
+                </div>
+            `;
+            setTimeout(() => {
+                const thinkingBox = document.querySelector(".result-box.loading-state");
+                if (thinkingBox) {
+                    thinkingBox.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }, 50);
+
+        });
+
+        // =================================================
+        // ON PAGE LOAD (Updated to include History)
+        // =================================================
+        window.onload = () => {
+            // 1. Initialize History (Checks if server restarted)
+            HistoryManager.init();
+
+            // 2. If a result just came back from the server, save it to history
+            const prevQuery = "{{ query }}";
+            const prevTool = "{{ tool_name }}";
+            if (prevQuery && prevQuery !== "") {
+                HistoryManager.add(prevQuery, prevTool);
+            }
+
+            // 3. Run original startup logic
+            applyLockedTool();
+            generateToolMenu();
+
+            const newResult = contentArea.querySelector('.result-box.initial-result');
+            const header = contentArea.querySelector('h1');
+
+            if (newResult) {
+                contentArea.insertBefore(newResult, header.nextSibling);
+                newResult.classList.remove('initial-result');
+            }
+
+            loadingPlaceholder.innerHTML = '';
+            inputField.focus();
+        };
+
+        // ===============================================
+        // IMAGE CONVERTER UI HANDLER (Preserved)
+        // ===============================================
+        function loadImageConverterUI() {
+            const toolArea = document.getElementById("dynamic-tool-area");
+
+            toolArea.innerHTML = `
+        <div class="result-box">
+            <h2><i class="fas fa-image"></i> Image Converter</h2>
+
+            <div class="upload-box" id="uploadBox">
+                <p>Click to Upload Image</p>
+                <input type="file" id="imageInput" accept="image/*" hidden>
+            </div>
+
+            <img id="previewImage" class="preview-image" style="display:none;"/>
+
+            <div class="conversion-options">
+                <label>Select Format:</label>
+                <select id="convertType">
+                    <option value="png">PNG</option>
+                    <option value="jpg">JPG</option>
+                    <option value="jpeg">JPEG</option>
+                    <option value="webp">WEBP</option>
+                    <option value="gif">GIF</option>
+                </select>
+            </div>
+
+            <button id="convertBtn" class="convert-btn">Convert</button>
+        </div>
+    `;
+
+            initImageConverterLogic();
+        }
+
+
+        function loadExeConverterUI() {
+            const toolArea = document.getElementById("dynamic-tool-area");
+
+            toolArea.innerHTML = `
+        <div class="result-box">
+            <h2><i class="fas fa-file-export"></i> EXE Converter</h2>
+
+            <div class="upload-box" id="exeUploadBox" style="position: relative;">
+                <p id="exeUploadText" style="text-align:center;">Click to Select Folder or Files</p>
+
+                <!-- Hidden Inputs -->
+                <input type="file" id="exeFolderInput" webkitdirectory directory hidden>
+                <input type="file" id="exeFilesInput" multiple hidden>
+
+                <!-- Dropdown -->
+                <div id="uploadMenu" class="upload-menu hidden">
+                    <div class="upload-option" data-type="folder">Upload Folder</div>
+                    <div class="upload-option" data-type="files">Upload Files</div>
+                </div>
+            </div>
+
+            <p style="opacity:0.6; margin-top:10px;">
+                Supports: Python project folders or individual files
+            </p>
+            <div id="exeFileListContainer" class="file-list-container hidden">
+                <div id="exeFileList" class="file-list"></div>
+                <button id="removeAllBtn" class="remove-all-btn">Remove All</button>
+            </div>
+
+
+            <button id="exeConvertBtn" class="convert-btn">Build EXE</button>
+        </div>
+    `;
+
+            // Initialize JS Logic
+            initExeConverterLogic();
+        }
+
+        function initImageConverterLogic() {
+            let uploadBox = document.getElementById("uploadBox");
+            let imageInput = document.getElementById("imageInput");
+            let preview = document.getElementById("previewImage");
+            let convertBtn = document.getElementById("convertBtn");
+
+            uploadBox.addEventListener("click", () => imageInput.click());
+
+            imageInput.addEventListener("change", () => {
+                let file = imageInput.files[0];
+                preview.src = URL.createObjectURL(file);
+                preview.style.display = "block";
+            });
+
+            convertBtn.addEventListener("click", async () => {
+                let file = imageInput.files[0];
+                let type = document.getElementById("convertType").value;
+
+                if (!file) {
+                    alert("Upload an image first!");
+                    return;
+                }
+
+                let formData = new FormData();
+                formData.append("image", file);
+                formData.append("convert_to", type);
+
+                let response = await fetch("/mcp-image-convert", {
+                    method: "POST",
+                    body: formData
+                });
+
+                let data = await response.json();
+
+                if (data.error) {
+                    alert("Conversion failed: " + data.error);
+                    return;
+                }
+
+                // Convert base64 → Blob
+                const byteCharacters = atob(data.base64_data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: data.mime_type });
+
+                // Download
+                let url = URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = data.download_name;
+                a.click();
+
+            });
+        }
+
+        function initExeConverterLogic() {
+            const uploadBox = document.getElementById("exeUploadBox");
+            const uploadMenu = document.getElementById("uploadMenu");
+            const folderInput = document.getElementById("exeFolderInput");
+            const filesInput = document.getElementById("exeFilesInput");
+            const uploadText = document.getElementById("exeUploadText");
+            const fileListContainer = document.getElementById("exeFileListContainer");
+            const fileList = document.getElementById("exeFileList");
+            const removeAllBtn = document.getElementById("removeAllBtn");
+
+            const convertBtn = document.getElementById("exeConvertBtn");
+
+            let selectedPaths = [];
+
+            // Show menu
+            uploadBox.addEventListener("click", (e) => {
+                e.stopPropagation();
+                uploadMenu.classList.toggle("hidden");
+            });
+
+            // Close menu on outside click
+            document.addEventListener("click", () => {
+                uploadMenu.classList.add("hidden");
+            });
+
+            // Menu item click
+            uploadMenu.addEventListener("click", (e) => {
+                const type = e.target.getAttribute("data-type");
+                uploadMenu.classList.add("hidden");
+
+                if (type === "folder") folderInput.click();
+                else if (type === "files") filesInput.click();
+            });
+
+            // Render file list
+            function updateFileList() {
+                fileList.innerHTML = "";
+
+                if (selectedPaths.length === 0) {
+                    fileListContainer.classList.add("hidden");
+                    uploadText.innerText = "0 items selected";
+                    return;
+                }
+
+                fileListContainer.classList.remove("hidden");
+
+                selectedPaths.forEach((file, index) => {
+                    const div = document.createElement("div");
+                    div.className = "file-item";
+                    div.innerHTML = `
+            <span>${file.webkitRelativePath || file.name}</span>
+            <button class="remove-btn" data-index="${index}">Remove</button>
+        `;
+                    fileList.appendChild(div);
+                });
+
+                uploadText.innerText = `${selectedPaths.length} items selected`;
+
+                document.querySelectorAll(".remove-btn").forEach(btn => {
+                    btn.addEventListener("click", (e) => {
+                        const idx = e.target.getAttribute("data-index");
+                        selectedPaths.splice(idx, 1);
+                        updateFileList();
+                    });
+                });
+            }
+            removeAllBtn.addEventListener("click", () => {
+                selectedPaths = [];
+                updateFileList();
+            });
+
+
+            // Handle selection
+            function handleSelection(event) {
+                const newFiles = Array.from(event.target.files);
+
+                selectedPaths = selectedPaths.concat(newFiles);
+
+                updateFileList();
+            }
+
+            folderInput.addEventListener("change", handleSelection);
+            filesInput.addEventListener("change", handleSelection);
+
+            // Build EXE
+            convertBtn.addEventListener("click", async () => {
+                if (selectedPaths.length === 0) {
+                    alert("Please select files or a folder first!");
+                    return;
+                }
+
+                let formData = new FormData();
+                selectedPaths.forEach(f => formData.append("files", f));
+
+                document.getElementById("exe-loading-overlay").style.display = "flex";
+
+                const blob = await fetch("/mcp-exe-convert", {
+                    method: "POST",
+                    body: formData
+                }).then(res => res.blob());
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "converted_app.exe";
+                a.click();
+
+                setTimeout(() => {
+                    document.getElementById("exe-loading-overlay").style.display = "none";
+                }, 1500);
+            });
+        }
+
+
+
+        function loadConvertersHub() {
+            const toolArea = document.getElementById("dynamic-tool-area");
+
+            toolArea.innerHTML = `
+        <div class="result-box">
+            <h2><i class="fas fa-exchange-alt"></i> Converters Hub</h2>
+
+            <div class="converter-list">
+                <div class="converter-item" onclick="loadImageConverterUI()">
+                    <i class="fas fa-image"></i> Image Converter
+                </div>
+
+                <div class="converter-item" onclick="loadExeConverterUI()">
+                    <i class="fas fa-file-pdf"></i> EXE Converter (beta)
+                </div>
+
+                <div class="converter-item">
+                    <i class="fas fa-file-audio"></i> Audio Converter (coming soon)
+                </div>
+
+                <div class="converter-item">
+                    <i class="fas fa-video"></i> Video Converter (coming soon)
+                </div>
+            </div>
+        </div>
+    `;
+        }
+
+        // Close tool menu when clicking outside (Preserved)
+        document.addEventListener("click", function (event) {
+            const menu = document.getElementById("tool-menu-box");
+            const button = document.getElementById("tool-menu-button");
+
+            // If click is outside BOTH menu & button → close
+            if (!menu.contains(event.target) && !button.contains(event.target)) {
+                menu.classList.add("hidden");
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>

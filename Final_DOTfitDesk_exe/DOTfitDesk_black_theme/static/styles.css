@@ -1,0 +1,975 @@
+/* ================================
+*  -----------DARK THEAM-----------
+* =================================*/
+
+/*
+ * --------------------------------
+ * 1. GLOBAL & BODY STYLES (NAVY THEME)
+ * --------------------------------
+ */
+:root {
+    /* Define color variables for easy theme changes */
+    --primary-color: #101111;
+    /* Indigo/Navy Blue */
+    /* --accent-color: #64b5f6; */
+    /* Lighter Blue for highlights */
+    --dark-bg: #101111;
+    /* Deep Indigo for gradients */
+    --text-color: #f0f0f0;
+    --darkest-bg: #0d0d1a;
+}
+
+body {
+    /* Deep blue/indigo gradient background */
+    background-color: #101111;
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Scrollbar styling */
+body::-webkit-scrollbar-thumb {
+    background-color: #2c3e50;
+}
+
+body::-webkit-scrollbar-track {
+    background-color: #000000;
+}
+
+/*
+ * --------------------------------
+ * 2. CONTENT & HEADER
+ * --------------------------------
+ */
+.content-area {
+    /* flex-grow: 1; */
+    position: relative;
+    padding: 20px 40px 140px 40px;
+    /* Added padding at bottom for floating bar clearance */
+    /* overflow-y: auto; */
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.content-area h1 {
+    color: var(--accent-color);
+    text-align: center;
+    font-weight: 300;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+    /* Subtle blue glow effect */
+    text-shadow: 0 0 8px rgba(100, 181, 246, 0.6);
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 120px;
+    pointer-events: none;
+    background: linear-gradient(to bottom,
+            rgba(15, 23, 42, 0) 0%,
+            #101111 80%);
+    z-index: 5;
+}
+
+/*
+ * --------------------------------
+ * 3. TOOL RESULT BOX (NAVY THEME)
+ * --------------------------------
+ */
+.result-box {
+    background-color: #1E1F20;
+    /* Translucent navy background */
+    /* border: 1px solid var(--primary-color); */
+    /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(17, 20, 36, 0.4); */
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.result-box h2 {
+    color: var(--accent-color);
+    border-bottom: 2px solid rgba(100, 181, 246, 0.3);
+    padding-bottom: 10px;
+    margin-top: 0;
+    font-size: 1.4em;
+}
+
+.result-box pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #d0d0d0;
+}
+
+.result-box pre strong {
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+/*
+ * --------------------------------
+ * 3.5 LOADING STATE STYLES
+ * --------------------------------
+ */
+/* Style for the loading version of the result box */
+.result-box.loading-state {
+
+    background-color: #1E1F20;
+    border-color: var(--accent-color);
+}
+
+.result-box.loading-state h2 {
+
+    color: var(--accent-color);
+}
+
+.fa-spin {
+    animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/*
+ * --------------------------------
+ * 3.7 QR CODE STYLES
+ * --------------------------------
+ */
+.qr-output-container {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.qr-message {
+    font-style: italic;
+    color: var(--accent-color);
+    margin-bottom: 15px;
+}
+
+.qr-code-image {
+    /* Set a reasonable maximum size for the QR code */
+    max-width: 200px;
+    height: auto;
+    /* Add a small border for visual separation */
+    border: 5px solid var(--text-color);
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/*
+ * --------------------------------
+ * 4. FLOATING SEARCH BAR
+ * --------------------------------
+ */
+.floating-search-bar {
+    /* Fixed position makes it float over content */
+    position: fixed;
+    bottom: 50px;
+    /* Distance from the bottom */
+    left: 0;
+    right: 0;
+    /* Removed the dark background container */
+    padding: 0 40px;
+    z-index: 1000;
+    /* Ensure it stays on top */
+}
+
+.floating-search-bar form {
+    display: flex;
+    max-width: 800px;
+    margin: 0 auto;
+    /* Add a background and round the whole bar for the "floating" effect */
+    background-color: #1E1F20;
+    /* Slightly transparent dark background */
+    border-radius: 30px;
+    /* Heavy shadow for the floating look */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(22, 22, 24, 0.5);
+}
+
+.floating-search-bar input[type="text"] {
+    flex-grow: 1;
+    padding: 12px 5px;
+    border: none;
+    /* Removed the input border */
+    border-radius: 30px 0 0 30px;
+    font-size: 17px;
+    background-color: transparent;
+    /* Transparent input background */
+    color: #fff;
+    outline: none;
+    transition: box-shadow 0.3s;
+}
+
+.floating-search-bar input[type="text"]:focus {
+    /* No border flash on focus, rely on the container shadow */
+    box-shadow: none;
+}
+
+.floating-search-bar input[type="text"]::placeholder {
+    color: #aaa;
+}
+
+.floating-search-bar button[type="submit"] {
+    /* Attractive button with blue gradient */
+    /* background: linear-gradient(45deg, #64b5f6, #3f51b5); */
+    background-color: transparent;
+    color: #fff;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 0 30px 30px 0;
+    cursor: pointer;
+    font-size: 17px;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.1s;
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.floating-search-bar button[type="submit"]:hover {
+    /* background: linear-gradient(45deg, #8182c7, #403ead); */
+    background-color: transparent;
+    transform: scale(1.03);
+}
+
+.floating-search-bar button[type="submit"]:active {
+    transform: scale(0.98);
+}
+
+/*
+ * --------------------------------
+ * 4.1 TOOL MENU BUTTON (THE '+')
+ * --------------------------------
+ */
+#tool-menu-button {
+    /* Style consistency */
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    padding: 12px 15px;
+    border: none;
+    border-radius: 30px 0 0 30px;
+    /* Rounded left side, flat right */
+    cursor: pointer;
+    font-size: 17px;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    /* Ensure no text selection */
+    user-select: none;
+
+    /* Add a visual separation from the input */
+    /* border-right: 1px solid rgba(255, 255, 255, 0.2); */
+
+    /* Make the button look good when hovered */
+    background-color: transparent;
+}
+
+#tool-menu-button:hover {
+    background: transparent;
+    transform: scale(1.05);
+    /* Pop out slightly */
+    color: var(--text-color);
+}
+
+/*
+ * --------------------------------
+ * 4.2 TOOL MENU POP-UP BOX
+ * --------------------------------
+ */
+.tool-menu-box {
+    /* Positioning */
+    position: absolute;
+    bottom: 65px;
+    left: 35%;
+    transform: translateX(-50%);
+    z-index: 1001;
+
+    /* Sizing & Scrolling */
+    width: 300px;
+    max-height: 250px;
+    /* Limit the height */
+    overflow-y: auto;
+    /* Enable scrolling */
+
+    /* Style */
+    background-color: #101111;
+    border: 1px solid var(--primary-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+
+    /* Remove padding here so the header touches the top edge */
+    padding: 0;
+
+    backdrop-filter: blur(5px);
+}
+
+.tool-menu-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tool-menu-box::-webkit-scrollbar-thumb {
+    /* Make the handle the same color as the background, 
+       but slightly lighter so it's only visible when looking closely */
+    background-color: #1E1F20;
+    border-radius: 10px;
+}
+
+.tool-menu-box.hidden {
+    display: none;
+}
+
+.menu-header {
+    /* Sticky Logic */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    /* Ensure it stays above the scrolling items */
+
+    /* Background is needed so items don't show *through* the header */
+    background-color: #101111;
+
+    /* Text Styling */
+    font-weight: bold;
+    color: var(--accent-color);
+    padding: 12px 15px;
+    /* Add the padding here instead of the container */
+    border-bottom: 1px solid #1E1F20;
+    margin-bottom: 0;
+}
+
+.tool-menu-item {
+    color: var(--text-color);
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: background-color 0.2s, color 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tool-menu-item:hover {
+    background-color: #1E1F20;
+    /* Darker on hover */
+    color: var(--accent-color);
+    /* Change text color */
+}
+
+/* Tooltip/Example logic using the 'title' attribute */
+/* The HTML uses 'title' for the example, which displays natively on hover. */
+/* No extra CSS is needed for the hover example, as the browser handles the tooltip (title attribute). */
+
+/*
+ * --------------------------------
+ * 4.5 DYNAMIC TOOL TAGS STYLES
+ * --------------------------------
+ */
+.tool-tags-container {
+    display: none;
+    justify-content: flex-start;
+    align-items: center;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+
+    /* Positioning above the search bar */
+    position: absolute;
+    bottom: 75px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.tool-tag {
+    /* Style the tag button */
+    background: var(--primary-color);
+    color: var(--text-color);
+    padding: 6px 12px;
+    margin-right: 10px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    transition: background-color 0.2s, transform 0.2s;
+    user-select: none;
+}
+
+.tool-tag:hover {
+    background: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+/*
+ * --------------------------------
+ * 5. FLOATING WARNING MESSAGE
+ * --------------------------------
+ */
+.floating-warning {
+    /* Fixed position to keep it on the screen */
+    position: fixed;
+    bottom: 20px;
+    /* Position it right at the very bottom */
+    left: 0;
+    right: 0;
+
+    /* Centering content and styling */
+    text-align: center;
+    padding: 5px 0;
+    font-size: 0.85em;
+
+    /* Colors derived from the theme */
+    /* background-color: rgba(30, 39, 90, 0.9); */
+    /* Translucent navy to match theme */
+    color: #ffffff;
+    /* Amber text for warning */
+    /* border-top: 1px solid rgba(255, 193, 7, 0.4); */
+
+    z-index: 999;
+    /* Ensure it stays above everything but below the search bar's z-index (1000) */
+
+    /* Ensure no text selection on the warning */
+    user-select: none;
+}
+
+.floating-warning i {
+    margin-right: 5px;
+}
+
+.floating-warning strong {
+    font-weight: bold;
+}
+
+
+/* ======================= 
+   DOTfit Desk-Style Logo
+   =======================  */
+
+.dotfit-logo-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    /* center horizontally */
+    margin-top: 25px;
+    margin-bottom: 10px;
+}
+
+.dotfit-logo-img {
+    height: 120px;
+    /* perfect size for your header */
+    object-fit: contain;
+    user-select: none;
+}
+
+.upload-box {
+    border: 2px dashed #3971e9;
+    padding: 25px;
+    text-align: center;
+    border-radius: 12px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.preview-image {
+    max-width: 300px;
+    display: block;
+    margin: 10px auto;
+    border-radius: 10px;
+}
+
+.convert-btn {
+    padding: 10px 20px;
+    background: #3971e9;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.converter-list {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.converter-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 1px solid rgba(100, 181, 246, 0.2);
+}
+
+.converter-item:hover {
+    background: rgba(100, 181, 246, 0.15);
+    transform: translateX(3px);
+}
+
+.result-link {
+    color: #3971e9;
+    /* light blue */
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.result-link:hover {
+    text-decoration: underline;
+    color: #2d6aee;
+}
+
+/* * --------------------------------
+ * 6. HISTORY SIDEBAR
+ * --------------------------------
+ */
+.history-toggle-btn {
+    position: fixed;
+    top: 20px;
+    left: 10px;
+    /* background: rgba(30, 39, 90, 0.8); */
+    background-color: transparent;
+    border: 1px;
+    color: var(--accent-color);
+    padding: 10px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    z-index: 2000;
+    transition: 0.3s;
+    font-size: 1.1em;
+    backdrop-filter: blur(5px);
+}
+
+.history-toggle-btn:hover {
+    /* background: var(--accent-color); */
+    background-color: transparent;
+    /* color: var(--darkest-bg); */
+    transform: translateX(20%);
+}
+
+.history-sidebar {
+    position: fixed;
+    top: 0;
+    left: -400px;
+    /* Hidden by default */
+    width: 300px;
+    height: 100vh;
+    /* background: linear-gradient(180deg, var(--darkest-bg) 0%, #121225 100%); */
+    background-color: #101111;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.7);
+    z-index: 1999;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 80px 20px 20px 20px;
+    /* Top padding clears the toggle button */
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid rgba(100, 181, 246, 0.1);
+}
+
+.history-sidebar.open {
+    left: 0;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    /* Pushes text left, button right */
+    align-items: center;
+    /* Centers them vertically */
+
+    font-size: 1.2em;
+    color: var(--accent-color);
+    border-bottom: 1px solid rgba(100, 181, 246, 0.3);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.history-list {
+    /* Layout Logic */
+    flex-grow: 1;
+    /* Fills all available space between Header and Button */
+    overflow-y: auto;
+    /* Enables scrolling ONLY inside this list */
+    min-height: 0;
+    /* Critical fix for Firefox/Flexbox scrolling */
+    /* Spacing */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 5px;
+    padding-bottom: 80px;
+    /* Space for the scrollbar so it doesn't cover text */
+    margin-bottom: 20px;
+    /* Space above the Clear button */
+
+    /* HIDE SCROLLBAR (Firefox) - Optional, matches your Tool Menu style */
+    scrollbar-width: thin;
+    scrollbar-color: #1E1F20 transparent;
+}
+
+/* CUSTOM SCROLLBAR (Chrome, Edge, Safari) */
+.history-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-list::-webkit-scrollbar-track {
+    background: transparent;
+    /* Invisible track */
+}
+
+.history-list::-webkit-scrollbar-thumb {
+    /* Matches your theme: Semi-transparent blue */
+    background-color: #1E1F20;
+    border-radius: 10px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+    background-color: #1E1F20;
+    /* Darker when you grab it */
+}
+
+.history-item {
+    background: #1E1F20;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 2px solid var(--primary-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    background: rgba(100, 181, 246, 0.1);
+    border-left-color: var(--accent-color);
+    transform: translateX(4px);
+}
+
+.history-query {
+    font-size: 0.95em;
+    color: #fff;
+    font-weight: 500;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-meta {
+    font-size: 0.8em;
+    color: #aaa;
+    display: flex;
+    justify-content: space-between;
+}
+
+.clear-history-btn {
+    /* Reset old styles */
+    background: transparent;
+    border: none;
+    width: auto;
+    margin: 0;
+
+    /* New Icon Style */
+    color: #ef5350;
+    /* Red icon */
+    cursor: pointer;
+    font-size: 0.9em;
+    /* Slightly smaller than header text */
+    padding: 5px 8px;
+    /* Clickable area */
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.clear-history-btn:hover {
+    /* background-color: rgba(239, 83, 80, 0.1); */
+    /* Subtle red glow */
+    transform: scale(1.1);
+}
+
+/* exe converter loading pg */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+}
+
+.loading-box {
+    background: #1e1e1e;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    color: white;
+    font-size: 1.2em;
+}
+
+.loading-box i {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.upload-menu {
+    position: absolute;
+    background: #111827;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    top: 55px;
+    padding: 5px 0;
+    width: 180px;
+    z-index: 1000;
+}
+
+.upload-menu.hidden {
+    display: none;
+}
+
+.upload-option {
+    padding: 10px;
+    color: white;
+    cursor: pointer;
+}
+
+.upload-option:hover {
+    background: #1e293b;
+}
+
+.file-list {
+    margin-top: 15px;
+    padding: 10px;
+    background: #0f172a;
+    border: 1px dashed #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-bottom: 1px solid #1e293b;
+    font-size: 14px;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.remove-btn {
+    background: #ef4444;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    color: white;
+}
+
+.remove-btn:hover {
+    background: #dc2626;
+}
+
+.file-list-container {
+    margin-top: 15px;
+}
+
+.file-list-container.hidden {
+    display: none;
+}
+
+.file-list {
+    padding: 10px;
+    background: #0f172a;
+    border: 1px dashed #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    max-height: 180px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.remove-all-btn {
+    background: #ef4444;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.remove-all-btn:hover {
+    background: #dc2626;
+}
+
+.convert-btn {
+    margin-top: 15px !important;
+    /* Adds spacing between list and build button */
+}
+
+/* ================================
+   RESPONSIVE FIXES FOR SPLIT SCREEN
+   ================================ */
+
+@media (max-width: 900px) {
+
+    /* Content area shrinks nicely */
+    .content-area {
+        padding: 20px 20px 120px 20px;
+        max-width: 100%;
+        width: 100%;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    /* Result box full width */
+    .result-box {
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Allow <pre> text to wrap */
+    .result-box pre {
+        white-space: pre-wrap !important;
+        overflow-wrap: break-word;
+    }
+
+    /* Floating search bar centered and fluid */
+    .floating-search-bar {
+        padding: 0 15px;
+    }
+
+    .floating-search-bar form {
+        max-width: 100% !important;
+        width: 100%;
+        border-radius: 20px;
+    }
+
+    /* Tool tags */
+    .tool-tags-container {
+        bottom: 90px;
+        padding-left: 0;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Tool menu popup */
+    .tool-menu-box {
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        bottom: 70px;
+    }
+
+    /* History sidebar */
+    .history-sidebar {
+        width: 240px !important;
+    }
+
+    .history-toggle-btn {
+        left: 5px;
+    }
+}
+
+/* ================================
+   FOR VERY SMALL SCREENS (<600px)
+   ================================ */
+
+@media (max-width: 600px) {
+
+    .floating-search-bar {
+        bottom: 70px;
+    }
+
+    .floating-search-bar input[type="text"] {
+        font-size: 15px;
+    }
+
+    .floating-search-bar button[type="submit"] {
+        font-size: 15px;
+        padding: 10px 18px;
+    }
+
+    /* Smaller result padding */
+    .result-box {
+        padding: 15px;
+    }
+
+    /* Smaller tool menu */
+    .tool-menu-item {
+        font-size: 0.9em;
+        padding: 8px 10px;
+    }
+
+    /* History sidebar smaller */
+    .history-sidebar {
+        width: 85%;
+    }
+}
+
+/* =========================================
+   FIX: Make result box fully visible in split screen
+   ========================================= */
+@media (max-width: 1200px) {
+    .content-area {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    .result-box {
+        width: 100% !important;
+        margin: 15px auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .result-box pre {
+        white-space: pre-wrap !important;
+        overflow-wrap: break-word !important;
+    }
+}
