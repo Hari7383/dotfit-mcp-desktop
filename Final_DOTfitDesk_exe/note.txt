@@ -1,0 +1,3 @@
+“This EXE has a separate main.py file inside the server folder, and this main.py does not work when hosting locally on the web. It only works when running the EXE for local hosting.”
+
+backup: exe_main (floder)
